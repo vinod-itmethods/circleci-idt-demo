@@ -1,0 +1,3 @@
+pytest
+# sonar-scanner
+boto3

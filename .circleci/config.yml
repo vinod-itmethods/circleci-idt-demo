@@ -1,0 +1,55 @@
+
+version: 2.1
+
+orbs:
+  slack: circleci/slack@4.12.5
+  aws-cli: circleci/aws-cli@4.0.0
+
+executors:
+  default:
+    docker:
+      - image: cimg/python:3.11
+    working_directory: ~/project
+
+jobs:
+  test_and_scan:
+    executor: default
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            pip install -r requirements.txt
+      - run:
+          name: Run unit tests
+          command: pytest
+      - run:
+          name: SonarQube SAST/SCA Scan
+          command: |
+            sonar-scanner -Dsonar.projectKey=my-project                           -Dsonar.sources=.                           -Dsonar.host.url=$SONAR_HOST_URL                           -Dsonar.login=$SONAR_TOKEN
+
+  deploy:
+    executor: aws-cli/default
+    steps:
+      - checkout
+      - aws-cli/setup:
+          aws-access-key-id: AWS_ACCESS_KEY_ID
+          aws-secret-access-key: AWS_SECRET_ACCESS_KEY
+          aws-region: AWS_REGION
+      - run:
+          name: Package app and deploy to S3
+          command: |
+            zip -r app-package.zip .
+            aws s3 cp app-package.zip s3://my-bucket/
+      - run:
+          name: Notify Slack
+          command: echo "Deployment Complete"
+
+workflows:
+  version: 2
+  build-deploy:
+    jobs:
+      - test_and_scan
+      - deploy:
+          requires:
+            - test_and_scan
