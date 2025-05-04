@@ -43,7 +43,7 @@ jobs:
           name: Package app and deploy to S3
           command: |
             zip -r app-package.zip .
-            aws s3 cp app-package.zip s3://my-bucket/
+            aws s3 cp app-package.zip s3://circleci-idt-demo-temp/
       - run:
           name: Notify Slack
           command: echo "Deployment Complete"
