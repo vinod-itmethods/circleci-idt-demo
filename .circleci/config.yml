@@ -1,40 +1,53 @@
-
 version: 2.1
 
 orbs:
-  slack: circleci/slack@4.12.5
-  aws-cli: circleci/aws-cli@4.0.0
-
-executors:
-  default:
-    docker:
-      - image: cimg/python:3.11
-    working_directory: ~/project
+  python: circleci/python@1.5.0
+  node: circleci/node@5.0.0
 
 jobs:
-  test_and_scan:
-    executor: default
+  build-and-test:
+    docker:
+      - image: cimg/python:3.10
     steps:
       - checkout
-      - run:
-          name: Install dependencies
-          command: |
-            pip install -r requirements.txt
+      - python/install-packages:
+          pkg-manager: pip
+          packages: pytest
       - run:
           name: Run unit tests
-          command: pytest
-      # - run:
-      #     name: SonarQube SAST/SCA Scan
-      #     command: |
-      #       sonar-scanner -Dsonar.projectKey=my-project \                         
-      #                     -Dsonar.sources=. \                         
-      #                     -Dsonar.host.url=$SONAR_HOST_URL \
-      #                     -Dsonar.login=$SONAR_TOKEN
+          command: pytest test_app.py
 
-  deploy:
-    executor: aws-cli/default
+  sonar-scan:
+    docker:
+      - image: cimg/base:stable
     steps:
       - checkout
+      - run:
+          name: Install SonarScanner
+          command: |
+            curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
+            unzip sonar-scanner.zip -d $HOME
+            export PATH="$HOME/sonar-scanner-4.8.0.2856-linux/bin:$PATH"
+      # - run:
+      #     name: Run SonarQube Scan
+      #     command: |
+      #       export PATH="$HOME/sonar-scanner-4.8.0.2856-linux/bin:$PATH"
+      #       sonar-scanner \
+      #         -Dsonar.projectKey=idt-demo \
+      #         -Dsonar.sources=. \
+      #         -Dsonar.host.url=$SONAR_HOST_URL \
+      #         -Dsonar.login=$SONAR_TOKEN
+
+  deploy:
+    docker:
+      - image: cimg/python:3.10
+    steps:
+      - checkout
+      - run:
+          name: Install AWS CLI
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y awscli
       - run:
           name: Configure AWS credentials
           command: |
@@ -42,19 +55,28 @@ jobs:
             aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
             aws configure set region $AWS_REGION
       - run:
-          name: Package app and deploy to S3
+          name: Upload to S3
           command: |
-            zip -r app-package.zip .
-            aws s3 cp app-package.zip s3://circleci-idt-demo-temp/
+            aws s3 cp app.py s3://$S3_BUCKET_NAME/ --region $AWS_REGION
+
+  notify:
+    docker:
+      - image: cimg/base:stable
+    steps:
       - run:
-          name: Notify Slack
-          command: echo "Deployment Complete"
+          name: Slack Notification (placeholder)
+          command: echo "✅ Build and Deploy completed!"  # Replace with Slack webhook if needed
 
 workflows:
-  version: 2
   build-deploy:
     jobs:
-      - test_and_scan
+      - build-and-test
+      - sonar-scan:
+          requires:
+            - build-and-test
       - deploy:
           requires:
-            - test_and_scan
+            - sonar-scan
+      - notify:
+          requires:
+            - deploy
