@@ -29,7 +29,7 @@ jobs:
           name: Install Python Dependencies
           command: pip install -r requirements.txt
       - snyk/scan:
-          args: "--file=requirements.txt --package-manager=pip"
+          command: "--file=requirements.txt --package-manager=pip"
 
   sonar-scan:
     docker:
