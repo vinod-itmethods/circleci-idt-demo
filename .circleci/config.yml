@@ -92,6 +92,6 @@ workflows:
       - deploy:
           requires:
             - sonar-scan
-      - notify:
-          requires:
-            - deploy
+      # - notify:
+      #     requires:
+      #       - deploy
