@@ -1,8 +1,9 @@
 version: 2.1
 
 orbs:
-  python: circleci/python@1.5.0
-  node: circleci/node@5.0.0
+  snyk: snyk/snyk@1.5.0
+  slack: circleci/slack@4.12.5
+  aws-cli: circleci/aws-cli@4.0.0
 
 jobs:
   build-and-test:
@@ -11,13 +12,24 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install pytest
+          name: Install Dependencies
           command: |
             python -m pip install --upgrade pip
-            pip install pytest
+            pip install -r requirements.txt
       - run:
-          name: Run unit tests
+          name: Run Unit Tests
           command: pytest test_app.py
+
+  snyk-scan:
+    docker:
+      - image: cimg/python:3.10
+    steps:
+      - checkout
+      - run:
+          name: Install Python Dependencies
+          command: pip install -r requirements.txt
+      - snyk/test:
+          args: "--file=requirements.txt --package-manager=pip"
 
   sonar-scan:
     docker:
@@ -29,11 +41,11 @@ jobs:
           command: |
             curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
             unzip sonar-scanner.zip -d $HOME
-            export PATH="$HOME/sonar-scanner-4.8.0.2856-linux/bin:$PATH"
+            echo 'export PATH="$HOME/sonar-scanner-4.8.0.2856-linux/bin:$PATH"' >> $BASH_ENV
       # - run:
       #     name: Run SonarQube Scan
       #     command: |
-      #       export PATH="$HOME/sonar-scanner-4.8.0.2856-linux/bin:$PATH"
+      #       source $BASH_ENV
       #       sonar-scanner \
       #         -Dsonar.projectKey=idt-demo \
       #         -Dsonar.sources=. \
@@ -45,37 +57,31 @@ jobs:
       - image: cimg/python:3.10
     steps:
       - checkout
-      - run:
-          name: Install AWS CLI
-          command: |
-            sudo apt-get update
-            sudo apt-get install -y awscli
-      - run:
-          name: Configure AWS credentials
-          command: |
-            aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
-            aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
-            aws configure set region $AWS_REGION
+      - aws-cli/setup
       - run:
           name: Upload to S3
           command: |
-            aws s3 cp app.py s3://$S3_BUCKET_NAME/ --region $AWS_REGION
+            zip -r app.zip app.py
+            aws s3 cp app.zip s3://$S3_BUCKET_NAME/
 
   notify:
     docker:
       - image: cimg/base:stable
     steps:
-      - run:
-          name: Slack Notification (placeholder)
-          command: echo "✅ Build and Deploy completed!"  # Replace with Slack webhook if needed
+      - slack/notify:
+          event: always
+          template: basic_success_1
 
 workflows:
   build-deploy:
     jobs:
       - build-and-test
-      - sonar-scan:
+      - snyk-scan:
           requires:
             - build-and-test
+      - sonar-scan:
+          requires:
+            - snyk-scan
       - deploy:
           requires:
             - sonar-scan
