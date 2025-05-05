@@ -73,6 +73,11 @@ jobs:
       - slack/notify:
           event: always
           template: basic_success_1
+          custom: |
+            {
+              "text": "✅ Demo complete: All steps executed in IDT pipeline."
+            }
+          continue-on-error: true
 
 workflows:
   build-deploy:
