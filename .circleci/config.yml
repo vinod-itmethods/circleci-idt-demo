@@ -91,7 +91,7 @@ workflows:
             - build-and-test
       - deploy:
           requires:
-            - sonar-scan
+            - snyk-scan
       # - notify:
       #     requires:
       #       - deploy
