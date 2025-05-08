@@ -25,7 +25,6 @@ jobs:
   resource_class: itmethods/mac
   steps:
     - checkout
-
     - run:
         name: Install SonarScanner (macOS)
         command: |
@@ -44,10 +43,8 @@ jobs:
           export PATH="$JAVA_HOME/bin:$PATH"
           echo "✅ Java version:"
           java -version
-
           echo "🔧 Enforcing Java 17 in properties"
           echo "sonar.java.command=$JAVA_HOME/bin/java" >> sonar-project.properties
-
           $HOME/sonar-scanner-4.8.0.2856-macosx/bin/sonar-scanner
 
 
