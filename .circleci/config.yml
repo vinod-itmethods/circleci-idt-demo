@@ -37,15 +37,20 @@ jobs:
             echo "sonar.token=$SONAR_TOKEN" >> sonar-project.properties
 
       - run:
-          name: Run SonarQube Scan with Java 17
+          name: Run SonarQube Scan via Java 17 JAR mode
           command: |
             export JAVA_HOME=$(/usr/libexec/java_home -v17)
             export PATH="$JAVA_HOME/bin:$PATH"
             echo "✅ Java version:"
             java -version
-            echo "🔧 Enforcing Java 17 in properties"
-            echo "sonar.java.command=$JAVA_HOME/bin/java" >> sonar-project.properties
-            $HOME/sonar-scanner-4.8.0.2856-macosx/bin/sonar-scanner
+
+            echo "sonar.token=$SONAR_TOKEN" >> sonar-project.properties
+
+            JAVA_EXEC="$JAVA_HOME/bin/java"
+            SCANNER_JAR=$(find $HOME/sonar-scanner-* -name "sonar-scanner-cli-*.jar" | head -n 1)
+
+            $JAVA_EXEC -jar "$SCANNER_JAR" -Dproject.settings=sonar-project.properties
+
 
 
   snyk-scan:
