@@ -21,31 +21,31 @@ jobs:
           command: pytest test_app.py
 
   sonar-scan:
-  machine: true
-  resource_class: itmethods/mac
-  steps:
-    - checkout
-    - run:
-        name: Install SonarScanner (macOS)
-        command: |
-          curl -L -o sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-macosx.zip
-          unzip -o sonar-scanner.zip -d $HOME
+    machine: true
+    resource_class: itmethods/mac
+    steps:
+      - checkout
+      - run:
+          name: Install SonarScanner (macOS)
+          command: |
+            curl -L -o sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-macosx.zip
+            unzip -o sonar-scanner.zip -d $HOME
 
-    - run:
-        name: Inject Sonar Token to Properties
-        command: |
-          echo "sonar.token=$SONAR_TOKEN" >> sonar-project.properties
+      - run:
+          name: Inject Sonar Token to Properties
+          command: |
+            echo "sonar.token=$SONAR_TOKEN" >> sonar-project.properties
 
-    - run:
-        name: Run SonarQube Scan with Java 17
-        command: |
-          export JAVA_HOME=$(/usr/libexec/java_home -v17)
-          export PATH="$JAVA_HOME/bin:$PATH"
-          echo "✅ Java version:"
-          java -version
-          echo "🔧 Enforcing Java 17 in properties"
-          echo "sonar.java.command=$JAVA_HOME/bin/java" >> sonar-project.properties
-          $HOME/sonar-scanner-4.8.0.2856-macosx/bin/sonar-scanner
+      - run:
+          name: Run SonarQube Scan with Java 17
+          command: |
+            export JAVA_HOME=$(/usr/libexec/java_home -v17)
+            export PATH="$JAVA_HOME/bin:$PATH"
+            echo "✅ Java version:"
+            java -version
+            echo "🔧 Enforcing Java 17 in properties"
+            echo "sonar.java.command=$JAVA_HOME/bin/java" >> sonar-project.properties
+            $HOME/sonar-scanner-4.8.0.2856-macosx/bin/sonar-scanner
 
 
   snyk-scan:
