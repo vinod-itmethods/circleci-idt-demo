@@ -65,7 +65,6 @@ jobs:
             echo "Deploying to: s3://$S3_BUCKET_NAME/app.zip"
             aws s3 cp app.zip s3://$S3_BUCKET_NAME/app.zip
 
-
   notify:
     docker:
       - image: cimg/base:stable
@@ -83,12 +82,12 @@ workflows:
   build-deploy:
     jobs:
       - build-and-test
-      - snyk-scan:
-          requires:
-            - sonar-scan
       - sonar-scan:
           requires:
             - build-and-test
+      - snyk-scan:
+          requires:
+            - sonar-scan
       - deploy:
           requires:
             - snyk-scan
