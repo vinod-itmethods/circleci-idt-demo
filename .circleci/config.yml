@@ -91,6 +91,6 @@ workflows:
       - deploy:
           requires:
             - snyk-scan
-      - notify:
-          requires:
-            - deploy
+      # - notify:
+      #     requires:
+      #       - deploy
