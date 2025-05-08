@@ -1,0 +1,6 @@
+runner:
+  name: "my-mac-runner"
+  working_directory: "/Users/vniod.avinane/circleci"
+  cleanup_working_directory: true
+api:
+  auth_token: "ae8920ea9f939899577a24016f2b04574b747b6f3e51a947fc62b833b673ead6fe5f760e889fc4a5"
