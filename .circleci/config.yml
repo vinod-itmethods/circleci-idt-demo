@@ -20,26 +20,26 @@ jobs:
           name: Run Unit Tests
           command: pytest test_app.py
 
-    sonar-scan:
-      machine: true
-      resource_class: itmethods/mac-agent
-      steps:
-        - checkout
-        - run:
-            name: Install SonarScanner
-            command: |
-              curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-macosx.zip
-              unzip sonar-scanner.zip -d $HOME
-              echo 'export PATH="$HOME/sonar-scanner-4.8.0.2856-macosx/bin:$PATH"' >> $BASH_ENV
-        - run:
-            name: Run SonarQube Scan
-            command: |
-              source $BASH_ENV
-              sonar-scanner \
-                -Dsonar.projectKey=idt-demo \
-                -Dsonar.sources=. \
-                -Dsonar.host.url=$SONAR_HOST_URL \
-                -Dsonar.login=$SONAR_TOKEN
+  sonar-scan:
+    machine: true
+    resource_class: itmethods/mac-agent
+    steps:
+      - checkout
+      - run:
+          name: Install SonarScanner
+          command: |
+            curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-macosx.zip
+            unzip sonar-scanner.zip -d $HOME
+            echo 'export PATH="$HOME/sonar-scanner-4.8.0.2856-macosx/bin:$PATH"' >> $BASH_ENV
+      - run:
+          name: Run SonarQube Scan
+          command: |
+            source $BASH_ENV
+            sonar-scanner \
+              -Dsonar.projectKey=idt-demo \
+              -Dsonar.sources=. \
+              -Dsonar.host.url=$SONAR_HOST_URL \
+              -Dsonar.login=$SONAR_TOKEN
 
 
 
