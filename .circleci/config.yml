@@ -41,8 +41,9 @@ jobs:
       - run:
           name: Run SonarQube Scan
           command: |
-            source $BASH_ENV
-            sonar-scanner \
+            export JAVA_HOME=$(/usr/libexec/java_home -v17)
+            export PATH="$JAVA_HOME/bin:$PATH"
+            $HOME/sonar-scanner-4.8.0.2856-macosx/bin/sonar-scanner \
               -Dsonar.projectKey=idt-demo \
               -Dsonar.sources=. \
               -Dsonar.host.url=$SONAR_HOST_URL \
