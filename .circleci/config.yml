@@ -20,36 +20,35 @@ jobs:
           name: Run Unit Tests
           command: pytest test_app.py
 
-  sonar-scan:
-    machine: true
-    resource_class: itmethods/mac-agent
-    steps:
-      - checkout
-      - run:
-          name: Install SonarScanner (macOS)
-          command: |
-            curl -L -o sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-macosx.zip
-            unzip -o sonar-scanner.zip -d $HOME
+    sonar-scan:
+      machine: true
+      resource_class: itmethods/mac
+      steps:
+        - checkout
 
-      - run:
-          name: Inject Sonar Token to Properties
-          command: |
-            echo "sonar.token=$SONAR_TOKEN" >> sonar-project.properties
+        - run:
+            name: Install SonarScanner CLI
+            command: |
+              curl -L -o sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-macosx.zip
+              unzip -o sonar-scanner.zip -d $HOME
 
-      - run:
-          name: Run SonarQube Scan via Java 17 JAR mode
-          command: |
-            export JAVA_HOME=$(/usr/libexec/java_home -v17)
-            export PATH="$JAVA_HOME/bin:$PATH"
-            echo "✅ Java version:"
-            java -version
+        - run:
+            name: Run SonarQube Scan with Java 17
+            command: |
+              export JAVA_HOME=$(/usr/libexec/java_home -v17)
+              export PATH="$JAVA_HOME/bin:$PATH"
+              echo "✅ Java version:"
+              java -version
 
-            echo "sonar.token=$SONAR_TOKEN" >> sonar-project.properties
+              # Find the SonarScanner JAR
+              SCANNER_JAR=$(find $HOME/sonar-scanner-* -name "sonar-scanner-cli-*.jar" | head -n 1)
 
-            JAVA_EXEC="$JAVA_HOME/bin/java"
-            SCANNER_JAR=$(find $HOME/sonar-scanner-* -name "sonar-scanner-cli-*.jar" | head -n 1)
+              # Run SonarQube scan using injected token and property file
+              $JAVA_HOME/bin/java \
+                -jar "$SCANNER_JAR" \
+                -Dproject.settings=sonar-project.properties \
+                -Dsonar.token=$SONAR_TOKEN
 
-            $JAVA_EXEC -jar "$SCANNER_JAR" -Dproject.settings=sonar-project.properties
 
 
 
