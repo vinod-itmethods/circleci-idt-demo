@@ -22,7 +22,7 @@ jobs:
 
   sonar-scan:
     machine: true
-    resource_class: itmethods/mac
+    resource_class: itmethods/mac-agent
     steps:
       - checkout
       - run:
