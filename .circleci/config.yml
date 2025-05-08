@@ -39,17 +39,17 @@ jobs:
             echo 'export PATH="$HOME/sonar-scanner-4.8.0.2856-macosx/bin:$PATH"' >> $BASH_ENV
 
       - run:
-        name: Run SonarQube Scan with Java 17
-        command: |
-          export JAVA_HOME=$(/usr/libexec/java_home -v17)
-          export PATH="$JAVA_HOME/bin:$PATH"
-          echo "✅ Java version used by sonar-scanner:"
-          java -version
-          $HOME/sonar-scanner-4.8.0.2856-macosx/bin/sonar-scanner \
-            -Dsonar.projectKey=idt-demo \
-            -Dsonar.sources=. \
-            -Dsonar.host.url=$SONAR_HOST_URL \
-            -Dsonar.login=$SONAR_TOKEN
+          name: Run SonarQube Scan with Java 17
+          command: |
+            export JAVA_HOME=$(/usr/libexec/java_home -v17)
+            export PATH="$JAVA_HOME/bin:$PATH"
+            echo "✅ Java version used by sonar-scanner:"
+            java -version
+            $HOME/sonar-scanner-4.8.0.2856-macosx/bin/sonar-scanner \
+              -Dsonar.projectKey=idt-demo \
+              -Dsonar.sources=. \
+              -Dsonar.host.url=$SONAR_HOST_URL \
+              -Dsonar.login=$SONAR_TOKEN
 
   snyk-scan:
     docker:
