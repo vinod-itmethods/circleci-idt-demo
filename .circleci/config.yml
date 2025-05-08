@@ -20,6 +20,27 @@ jobs:
           name: Run Unit Tests
           command: pytest test_app.py
 
+  sonar-scan:
+    machine: true
+    resource_class: itmethods/mac
+    steps:
+      - checkout
+      - run:
+          name: Install SonarScanner (macOS)
+          command: |
+            curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-macosx.zip
+            unzip sonar-scanner.zip -d $HOME
+            echo 'export PATH="$HOME/sonar-scanner-4.8.0.2856-macosx/bin:$PATH"' >> $BASH_ENV
+      - run:
+          name: Run SonarQube Scan
+          command: |
+            source $BASH_ENV
+            sonar-scanner \
+              -Dsonar.projectKey=idt-demo \
+              -Dsonar.sources=. \
+              -Dsonar.host.url=$SONAR_HOST_URL \
+              -Dsonar.login=$SONAR_TOKEN
+
   snyk-scan:
     docker:
       - image: cimg/python:3.10
@@ -30,27 +51,6 @@ jobs:
           command: pip install -r requirements.txt
       - snyk/scan:
           command: "--file=requirements.txt --package-manager=pip"
-
-  sonar-scan:
-    machine: true
-    resource_class: itmethods/mac
-    steps:
-      - checkout
-      - run:
-          name: Install SonarScanner
-          command: |
-            curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
-            unzip sonar-scanner.zip -d $HOME
-            echo 'export PATH="$HOME/sonar-scanner-4.8.0.2856-linux/bin:$PATH"' >> $BASH_ENV
-      - run:
-          name: Run SonarQube Scan
-          command: |
-            source $BASH_ENV
-            sonar-scanner \
-              -Dsonar.projectKey=idt-demo \
-              -Dsonar.sources=. \
-              -Dsonar.host.url=$SONAR_HOST_URL \
-              -Dsonar.login=$SONAR_TOKEN
 
   deploy:
     docker:
@@ -64,7 +64,6 @@ jobs:
             zip -r app.zip app.py
             echo "Deploying to: s3://$S3_BUCKET_NAME/app.zip"
             aws s3 cp app.zip s3://$S3_BUCKET_NAME/app.zip
-
 
   notify:
     docker:
@@ -83,15 +82,15 @@ workflows:
   build-deploy:
     jobs:
       - build-and-test
-      - snyk-scan:
-          requires:
-            - sonar-scan
       - sonar-scan:
           requires:
             - build-and-test
+      - snyk-scan:
+          requires:
+            - sonar-scan
       - deploy:
           requires:
             - snyk-scan
-      # - notify:
-      #     requires:
-      #       - deploy
+      - notify:
+          requires:
+            - deploy
