@@ -26,6 +26,12 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Set Java 17
+          command: |
+            export JAVA_HOME=$(/usr/libexec/java_home -v17)
+            echo 'export JAVA_HOME=$(/usr/libexec/java_home -v17)' >> $BASH_ENV
+            echo 'export PATH="$JAVA_HOME/bin:$PATH"' >> $BASH_ENV
+      - run:
           name: Install SonarScanner (macOS)
           command: |
             curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-macosx.zip
