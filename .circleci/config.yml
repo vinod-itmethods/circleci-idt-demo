@@ -22,33 +22,28 @@ jobs:
 
   sonar-scan:
     machine: true
-    resource_class: itmethods/mac-agent
+    resource_class: itmethods/mac
     steps:
       - checkout
       - run:
-          name: Install SonarScanner CLI
-          command: |
-            curl -L -o sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-macosx.zip
-            unzip -o sonar-scanner.zip -d $HOME
-
-      - run:
-          name: Run SonarQube Scan with Java 17
+          name: Install Java 17 and SonarScanner
           command: |
             export JAVA_HOME=$(/usr/libexec/java_home -v17)
             export PATH="$JAVA_HOME/bin:$PATH"
-            echo "✅ Java version:"
-            java -version
-
-            # Find the SonarScanner JAR
+            curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
+            unzip sonar-scanner.zip -d $HOME
+            echo 'export PATH="$HOME/sonar-scanner-4.8.0.2856-linux/bin:$PATH"' >> $BASH_ENV
+      - run:
+          name: Run SonarQube Scan
+          command: |
+            export JAVA_HOME=$(/usr/libexec/java_home -v17)
+            export PATH="$JAVA_HOME/bin:$PATH"
+            source $BASH_ENV
             SCANNER_JAR=$(find $HOME/sonar-scanner-* -name "sonar-scanner-cli-*.jar" | head -n 1)
-
-            # Run SonarQube scan using injected token and property file
             $JAVA_HOME/bin/java \
               -jar "$SCANNER_JAR" \
               -Dproject.settings=sonar-project.properties \
               -Dsonar.token=$SONAR_TOKEN
-
-
 
 
   snyk-scan:
