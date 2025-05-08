@@ -34,9 +34,10 @@ jobs:
       - run:
           name: Install SonarScanner (macOS)
           command: |
-            curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-macosx.zip
-            unzip sonar-scanner.zip -d $HOME
+            curl -L -o sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-macosx.zip
+            unzip -o sonar-scanner.zip -d $HOME || (echo "❌ Failed to unzip!" && exit 1)
             echo 'export PATH="$HOME/sonar-scanner-4.8.0.2856-macosx/bin:$PATH"' >> $BASH_ENV
+
       - run:
           name: Run SonarQube Scan
           command: |
